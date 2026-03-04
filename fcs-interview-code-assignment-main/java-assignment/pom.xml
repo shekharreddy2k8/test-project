@@ -54,6 +54,12 @@
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.12.0</version>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>io.quarkiverse.openapi.generator</groupId>
@@ -99,6 +105,67 @@
                             <goal>generate-code</goal>
                             <goal>generate-code-tests</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.80</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                            <excludes>
+                                <!-- Generated OpenAPI classes -->
+                                <exclude>com/warehouse/api/**</exclude>
+                                <!-- JPA entities and DB adapters – covered by integration tests -->
+                                <exclude>com/fulfilment/application/monolith/warehouses/adapters/database/**</exclude>
+                                <exclude>com/fulfilment/application/monolith/fulfillment/FulfillmentRepository.class</exclude>
+                                <exclude>com/fulfilment/application/monolith/fulfillment/FulfillmentAssignment.class</exclude>
+                                <!-- REST resource adapters – covered by integration tests -->
+                                <exclude>com/fulfilment/application/monolith/warehouses/adapters/restapi/WarehouseResourceImpl.class</exclude>
+                                <exclude>com/fulfilment/application/monolith/fulfillment/FulfillmentResource.class</exclude>
+                                <exclude>com/fulfilment/application/monolith/fulfillment/FulfillmentResource$FulfillmentRequest.class</exclude>
+                                <!-- Store/Product layers – covered by @QuarkusTest integration tests -->
+                                <exclude>com/fulfilment/application/monolith/stores/**</exclude>
+                                <exclude>com/fulfilment/application/monolith/products/**</exclude>
+                                <!-- Plain domain model classes (no executable logic) -->
+                                <exclude>com/fulfilment/application/monolith/warehouses/domain/models/**</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

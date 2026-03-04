@@ -40,9 +40,9 @@ public class WarehouseResourceImpl implements WarehouseResource {
 
   @Override
   public Warehouse getAWarehouseUnitByID(String id) {
-    var warehouse = warehouseRepository.findByBusinessUnitCode(id);
+    var warehouse = warehouseRepository.findById(id);
     if (warehouse == null) {
-      throw new WebApplicationException("Warehouse with businessUnitCode " + id + " does not exist.", 404);
+      throw new WebApplicationException("Warehouse with id " + id + " does not exist.", 404);
     }
 
     return toWarehouseResponse(warehouse);
@@ -51,9 +51,9 @@ public class WarehouseResourceImpl implements WarehouseResource {
   @Override
   @Transactional
   public void archiveAWarehouseUnitByID(String id) {
-    var warehouse = warehouseRepository.findByBusinessUnitCode(id);
+    var warehouse = warehouseRepository.findById(id);
     if (warehouse == null) {
-      throw new WebApplicationException("Warehouse with businessUnitCode " + id + " does not exist.", 404);
+      throw new WebApplicationException("Warehouse with id " + id + " does not exist.", 404);
     }
 
     archiveWarehouseUseCase.archive(warehouse);

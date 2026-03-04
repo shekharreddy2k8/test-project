@@ -20,7 +20,7 @@ public class CreateWarehouseUseCase implements CreateWarehouseOperation {
 
   @Override
   public void create(Warehouse warehouse) {
-    validateMandatoryFields(warehouse);
+    WarehouseValidator.validateMandatoryFields(warehouse);
 
     if (warehouseStore.findByBusinessUnitCode(warehouse.businessUnitCode) != null) {
       throw new IllegalArgumentException("Business unit code already exists");
@@ -57,21 +57,5 @@ public class CreateWarehouseUseCase implements CreateWarehouseOperation {
 
     // if all went well, create the warehouse
     warehouseStore.create(warehouse);
-  }
-
-  private static void validateMandatoryFields(Warehouse warehouse) {
-    if (warehouse == null
-        || warehouse.businessUnitCode == null
-        || warehouse.businessUnitCode.isBlank()
-        || warehouse.location == null
-        || warehouse.location.isBlank()
-        || warehouse.capacity == null
-        || warehouse.stock == null) {
-      throw new IllegalArgumentException("Warehouse payload is invalid");
-    }
-
-    if (warehouse.capacity <= 0 || warehouse.stock < 0) {
-      throw new IllegalArgumentException("Warehouse capacity/stock values are invalid");
-    }
   }
 }

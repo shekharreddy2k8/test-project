@@ -52,6 +52,50 @@ public class ReplaceWarehouseUseCaseTest {
 		assertThrows(IllegalStateException.class, () -> useCase.replace(replacement));
 	}
 
+	@Test
+	void shouldRejectWhenPayloadIsNull() {
+		assertThrows(IllegalArgumentException.class, () -> useCase.replace(null));
+	}
+
+	@Test
+	void shouldRejectWhenBusinessUnitCodeIsBlank() {
+		Warehouse replacement = warehouse("", "ZWOLLE-001", 25, 7);
+
+		assertThrows(IllegalArgumentException.class, () -> useCase.replace(replacement));
+	}
+
+	@Test
+	void shouldRejectWhenLocationIsInvalid() {
+		Warehouse replacement = warehouse("MWH.600", "UNKNOWN-LOC", 25, 7);
+
+		assertThrows(IllegalArgumentException.class, () -> useCase.replace(replacement));
+	}
+
+	@Test
+	void shouldRejectWhenNewCapacityCannotAccommodateCurrentStock() {
+		// current stock is 7; new capacity 5 < 7
+		Warehouse replacement = warehouse("MWH.600", "ZWOLLE-001", 5, 7);
+
+		assertThrows(IllegalArgumentException.class, () -> useCase.replace(replacement));
+	}
+
+	@Test
+	void shouldRejectWhenLocationMaxWarehousesExceeded() {
+		// ZWOLLE-001 maxNumberOfWarehouses = 2; add one extra warehouse to fill the location
+		Warehouse extra = warehouse("MWH.601", "ZWOLLE-001", 10, 3);
+		warehouseStore.create(extra);
+
+		// Now ZWOLLE-001 already has MWH.601 (plus the excluded MWH.600 being replaced = 1 active
+		// after exclusion). With maxWarehouses=2 and 1 other already there it fits, so
+		// add a second filler to hit the limit
+		Warehouse filler = warehouse("MWH.602", "ZWOLLE-001", 5, 2);
+		warehouseStore.create(filler);
+
+		// Replacing MWH.600 to ZWOLLE-001 while 2 others are already at the location → exceeds max 2
+		Warehouse replacement = warehouse("MWH.600", "ZWOLLE-001", 20, 7);
+		assertThrows(IllegalArgumentException.class, () -> useCase.replace(replacement));
+	}
+
 	private static Warehouse warehouse(String businessUnitCode, String location, Integer capacity, Integer stock) {
 		Warehouse warehouse = new Warehouse();
 		warehouse.businessUnitCode = businessUnitCode;
@@ -101,6 +145,11 @@ public class ReplaceWarehouseUseCaseTest {
 		@Override
 		public void remove(Warehouse warehouse) {
 			warehouses.removeIf(current -> current.businessUnitCode.equals(warehouse.businessUnitCode));
+		}
+
+		@Override
+		public Warehouse findById(String id) {
+			return findByBusinessUnitCode(id);
 		}
 
 		@Override

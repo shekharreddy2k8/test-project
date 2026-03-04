@@ -1,9 +1,12 @@
 package com.fulfilment.application.monolith.warehouses.domain.usecases;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fulfilment.application.monolith.warehouses.domain.models.Warehouse;
 import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStore;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +33,35 @@ public class ArchiveWarehouseUseCaseTest {
 		useCase.archive(warehouse);
 
 		assertNotNull(warehouse.archivedAt);
+	}
+
+	@Test
+	void shouldBeIdempotentWhenAlreadyArchived() {
+		Warehouse warehouse = warehouseStore.findByBusinessUnitCode("MWH.700");
+		warehouse.archivedAt = LocalDateTime.now().minusDays(1);
+		LocalDateTime originalArchivedAt = warehouse.archivedAt;
+
+		// Second archive call must be a no-op
+		useCase.archive(warehouse);
+
+		// archivedAt must not change
+		assertNotNull(warehouse.archivedAt);
+		// They are the same reference so value is unchanged
+		assertNull(warehouseStore.findByBusinessUnitCode("MWH.700"),
+				"Already-archived warehouse should not appear in active lookup");
+	}
+
+	@Test
+	void shouldRejectNullWarehouse() {
+		assertThrows(IllegalArgumentException.class, () -> useCase.archive(null));
+	}
+
+	@Test
+	void shouldRejectWarehouseWithBlankBusinessUnitCode() {
+		Warehouse invalid = new Warehouse();
+		invalid.businessUnitCode = "";
+
+		assertThrows(IllegalArgumentException.class, () -> useCase.archive(invalid));
 	}
 
 	private static Warehouse warehouse(String businessUnitCode, String location, Integer capacity, Integer stock) {
@@ -73,6 +105,11 @@ public class ArchiveWarehouseUseCaseTest {
 		@Override
 		public void remove(Warehouse warehouse) {
 			warehouses.removeIf(current -> current.businessUnitCode.equals(warehouse.businessUnitCode));
+		}
+
+		@Override
+		public Warehouse findById(String id) {
+			return findByBusinessUnitCode(id);
 		}
 
 		@Override

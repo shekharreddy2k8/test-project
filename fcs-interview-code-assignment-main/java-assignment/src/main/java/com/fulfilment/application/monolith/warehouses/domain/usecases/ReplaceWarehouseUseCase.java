@@ -20,15 +20,7 @@ public class ReplaceWarehouseUseCase implements ReplaceWarehouseOperation {
 
   @Override
   public void replace(Warehouse newWarehouse) {
-    if (newWarehouse == null
-        || newWarehouse.businessUnitCode == null
-        || newWarehouse.businessUnitCode.isBlank()
-        || newWarehouse.location == null
-        || newWarehouse.location.isBlank()
-        || newWarehouse.capacity == null
-        || newWarehouse.stock == null) {
-      throw new IllegalArgumentException("Warehouse payload is invalid");
-    }
+    WarehouseValidator.validateMandatoryFields(newWarehouse);
 
     Warehouse currentWarehouse = warehouseStore.findByBusinessUnitCode(newWarehouse.businessUnitCode);
     if (currentWarehouse == null) {
@@ -44,7 +36,7 @@ public class ReplaceWarehouseUseCase implements ReplaceWarehouseOperation {
       throw new IllegalArgumentException("Replacement warehouse stock must match current stock");
     }
 
-    if (newWarehouse.capacity <= 0 || newWarehouse.stock < 0 || newWarehouse.capacity < currentWarehouse.stock) {
+    if (newWarehouse.capacity < currentWarehouse.stock) {
       throw new IllegalArgumentException(
           "Replacement warehouse capacity cannot accommodate current stock");
     }

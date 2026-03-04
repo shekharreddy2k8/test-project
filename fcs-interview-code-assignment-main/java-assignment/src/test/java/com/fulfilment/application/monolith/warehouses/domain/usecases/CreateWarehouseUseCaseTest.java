@@ -61,6 +61,40 @@ public class CreateWarehouseUseCaseTest {
 		assertThrows(IllegalArgumentException.class, () -> useCase.create(warehouse));
 	}
 
+	@Test
+	void shouldRejectWhenMaxWarehousesForLocationReached() {
+		// ZWOLLE-001 has maxNumberOfWarehouses = 2
+		Warehouse first = warehouse("MWH.503", "ZWOLLE-001", 5, 2);
+		Warehouse second = warehouse("MWH.504", "ZWOLLE-001", 5, 2);
+		useCase.create(first);
+		useCase.create(second);
+
+		Warehouse third = warehouse("MWH.505", "ZWOLLE-001", 5, 1);
+		assertThrows(IllegalArgumentException.class, () -> useCase.create(third));
+	}
+
+	@Test
+	void shouldRejectWhenLocationMaxCapacityExceeded() {
+		// ZWOLLE-001 maxCapacity = 40; add a warehouse with capacity 35, then try to add another with capacity 10
+		Warehouse first = warehouse("MWH.506", "ZWOLLE-001", 35, 10);
+		useCase.create(first);
+
+		Warehouse second = warehouse("MWH.507", "ZWOLLE-001", 10, 5);
+		assertThrows(IllegalArgumentException.class, () -> useCase.create(second));
+	}
+
+	@Test
+	void shouldRejectWithNullPayload() {
+		assertThrows(IllegalArgumentException.class, () -> useCase.create(null));
+	}
+
+	@Test
+	void shouldRejectWithZeroCapacity() {
+		Warehouse warehouse = warehouse("MWH.508", "ZWOLLE-001", 0, 0);
+
+		assertThrows(IllegalArgumentException.class, () -> useCase.create(warehouse));
+	}
+
 	private static Warehouse warehouse(String businessUnitCode, String location, Integer capacity, Integer stock) {
 		Warehouse warehouse = new Warehouse();
 		warehouse.businessUnitCode = businessUnitCode;
@@ -113,6 +147,11 @@ public class CreateWarehouseUseCaseTest {
 		@Override
 		public void remove(Warehouse warehouse) {
 			warehouses.removeIf(current -> current.businessUnitCode.equals(warehouse.businessUnitCode));
+		}
+
+		@Override
+		public Warehouse findById(String id) {
+			return findByBusinessUnitCode(id);
 		}
 
 		@Override

@@ -47,6 +47,11 @@ public class WarehouseRepository implements WarehouseStore, PanacheRepository<Db
   }
 
   @Override
+  public Warehouse findById(String id) {
+    return findByBusinessUnitCode(id);
+  }
+
+  @Override
   public Warehouse findByBusinessUnitCode(String buCode) {
     DbWarehouse dbWarehouse = find("businessUnitCode = ?1 and archivedAt is null", buCode).firstResult();
     if (dbWarehouse == null) {

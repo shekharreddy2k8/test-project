@@ -24,6 +24,9 @@ public class LocationGateway implements LocationResolver {
 
   @Override
   public Location resolveByIdentifier(String identifier) {
+    if (identifier == null || identifier.isBlank()) {
+      throw new IllegalArgumentException("Location identifier must not be null or blank");
+    }
     return locations.stream()
         .filter(location -> location.identification.equals(identifier))
         .findFirst()

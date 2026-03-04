@@ -104,6 +104,34 @@ public class WarehouseEndpointTest {
     assertEquals(404, exception.getResponse().getStatus());
   }
 
+  @Test
+  void testGetWarehouseByIdNotFound() {
+    WebApplicationException exception =
+        assertThrows(WebApplicationException.class, () -> resource.getAWarehouseUnitByID("NONEXISTENT"));
+    assertEquals(404, exception.getResponse().getStatus());
+  }
+
+  @Test
+  void testArchiveWarehouseNotFound() {
+    WebApplicationException exception =
+        assertThrows(WebApplicationException.class, () -> resource.archiveAWarehouseUnitByID("NONEXISTENT"));
+    assertEquals(404, exception.getResponse().getStatus());
+  }
+
+  @Test
+  void testReplaceWarehouseNotFound() {
+    var payload = new com.warehouse.api.beans.Warehouse();
+    payload.setLocation("ZWOLLE-001");
+    payload.setCapacity(15);
+    payload.setStock(5);
+
+    WebApplicationException exception =
+        assertThrows(
+            WebApplicationException.class,
+            () -> resource.replaceTheCurrentActiveWarehouse("NONEXISTENT", payload));
+    assertEquals(404, exception.getResponse().getStatus());
+  }
+
   private static Warehouse seed(String buCode, String location, Integer capacity, Integer stock) {
     Warehouse warehouse = new Warehouse();
     warehouse.businessUnitCode = buCode;
