@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 
 public class Warehouse {
 
+  // database primary key (used as the REST resource id)
+  public Long id;
+
   // unique identifier
   public String businessUnitCode;
 

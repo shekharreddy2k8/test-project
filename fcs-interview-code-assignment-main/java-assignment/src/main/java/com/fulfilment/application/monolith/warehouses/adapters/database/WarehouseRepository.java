@@ -46,9 +46,22 @@ public class WarehouseRepository implements WarehouseStore, PanacheRepository<Db
     delete("businessUnitCode = ?1 and archivedAt is null", warehouse.businessUnitCode);
   }
 
-  @Override
+  /**
+   * Looks up an active warehouse by its numeric database primary key.
+   * Returns {@code null} if the id is not a valid number, the row does not exist,
+   * or the warehouse has already been archived.
+   */
   public Warehouse findById(String id) {
-    return findByBusinessUnitCode(id);
+    try {
+      Long numericId = Long.parseLong(id);
+      DbWarehouse dbWarehouse = findById(numericId); // Panache PanacheRepository.findById(Object)
+      if (dbWarehouse == null || dbWarehouse.archivedAt != null) {
+        return null;
+      }
+      return dbWarehouse.toWarehouse();
+    } catch (NumberFormatException e) {
+      return null;
+    }
   }
 
   @Override

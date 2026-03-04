@@ -148,11 +148,6 @@ public class ReplaceWarehouseUseCaseTest {
 		}
 
 		@Override
-		public Warehouse findById(String id) {
-			return findByBusinessUnitCode(id);
-		}
-
-		@Override
 		public Warehouse findByBusinessUnitCode(String buCode) {
 			return warehouses.stream()
 					.filter(current -> current.archivedAt == null)

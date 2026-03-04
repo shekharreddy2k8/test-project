@@ -24,10 +24,11 @@ public class WarehouseEndpointIT {
   }
 
   @Test
-  public void testGetWarehouseByBusinessUnitCode() {
+  public void testGetWarehouseById() {
+    // id=1 corresponds to MWH.001 as seeded in import.sql
     given()
         .when()
-        .get(PATH + "/MWH.001")
+        .get(PATH + "/1")
         .then()
         .statusCode(200)
         .body(containsString("MWH.001"), containsString("ZWOLLE-001"));
@@ -35,7 +36,8 @@ public class WarehouseEndpointIT {
 
   @Test
   public void testArchiveWarehouseShouldHideFromActiveList() {
-    given().when().delete(PATH + "/MWH.023").then().statusCode(204);
+    // id=3 corresponds to MWH.023 as seeded in import.sql
+    given().when().delete(PATH + "/3").then().statusCode(204);
 
     given()
         .when()
@@ -108,9 +110,11 @@ public class WarehouseEndpointIT {
         .statusCode(200)
         .body(containsString("MWH.001"), containsString("ZWOLLE-001"));
 
+    // After replace, verify the new active warehouse appears in the list
+    // (we use the list endpoint because the numeric id of the replacement is auto-generated)
     given()
         .when()
-        .get(PATH + "/MWH.001")
+        .get(PATH)
         .then()
         .statusCode(200)
         .body(containsString("MWH.001"), containsString("ZWOLLE-001"));

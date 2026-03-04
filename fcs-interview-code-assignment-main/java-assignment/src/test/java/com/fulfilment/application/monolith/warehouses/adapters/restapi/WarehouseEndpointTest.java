@@ -49,8 +49,9 @@ public class WarehouseEndpointTest {
   }
 
   @Test
-  void testGetWarehouseByBusinessUnitCode() {
-    var response = resource.getAWarehouseUnitByID("MWH.001");
+  void testGetWarehouseById() {
+    // MWH.001 is the first warehouse seeded, so its auto-assigned id is 1
+    var response = resource.getAWarehouseUnitByID("1");
     assertEquals("MWH.001", response.getBusinessUnitCode());
     assertEquals("ZWOLLE-001", response.getLocation());
   }
@@ -97,10 +98,11 @@ public class WarehouseEndpointTest {
 
   @Test
   void testArchiveWarehouseShouldHideFromActiveLookup() {
-    resource.archiveAWarehouseUnitByID("MWH.023");
+    // MWH.023 is the third warehouse seeded, so its auto-assigned id is 3
+    resource.archiveAWarehouseUnitByID("3");
 
     WebApplicationException exception =
-        assertThrows(WebApplicationException.class, () -> resource.getAWarehouseUnitByID("MWH.023"));
+        assertThrows(WebApplicationException.class, () -> resource.getAWarehouseUnitByID("3"));
     assertEquals(404, exception.getResponse().getStatus());
   }
 
@@ -116,7 +118,7 @@ public class WarehouseEndpointTest {
     WebApplicationException exception =
         assertThrows(WebApplicationException.class, () -> resource.archiveAWarehouseUnitByID("NONEXISTENT"));
     assertEquals(404, exception.getResponse().getStatus());
-    
+
   }
 
   @Test
@@ -158,9 +160,27 @@ public class WarehouseEndpointTest {
       return warehouses.stream().filter(current -> current.archivedAt == null).toList();
     }
 
+    private long idSequence = 1;
+
     @Override
     public void create(Warehouse warehouse) {
-      warehouses.add(copy(warehouse));
+      Warehouse copy = copy(warehouse);
+      copy.id = idSequence++;
+      warehouses.add(copy);
+    }
+
+    @Override
+    public Warehouse findById(String id) {
+      try {
+        long numericId = Long.parseLong(id);
+        return warehouses.stream()
+            .filter(w -> w.archivedAt == null)
+            .filter(w -> w.id != null && w.id == numericId)
+            .findFirst()
+            .orElse(null);
+      } catch (NumberFormatException e) {
+        return null;
+      }
     }
 
     @Override
@@ -192,6 +212,7 @@ public class WarehouseEndpointTest {
 
     private static Warehouse copy(Warehouse source) {
       Warehouse copy = new Warehouse();
+      copy.id = source.id;
       copy.businessUnitCode = source.businessUnitCode;
       copy.location = source.location;
       copy.capacity = source.capacity;

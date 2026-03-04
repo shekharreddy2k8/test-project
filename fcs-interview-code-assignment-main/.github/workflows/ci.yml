@@ -1,10 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+  push:              # triggers on every branch pushed
+  pull_request:      # triggers on every PR regardless of base branch
+  workflow_dispatch: # allows manual runs from the Actions tab
 
 jobs:
   build-and-test:
@@ -22,12 +21,44 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Build and run unit tests with coverage
+      - name: Build and run tests with JaCoCo coverage
         working-directory: java-assignment
-        run: ./mvnw verify -Dquarkus.container-image.build=false
-        env:
-          # Allow Quarkus Dev Services (Testcontainers) to spin up PostgreSQL
-          TESTCONTAINERS_RYUK_DISABLED: "false"
+        # verify phase: compiles, runs unit tests, generates JaCoCo report, enforces 80% threshold
+        run: ./mvnw verify --no-transfer-progress
+
+      - name: Publish coverage summary to Actions step summary
+        if: always()
+        working-directory: java-assignment
+        run: |
+          REPORT=target/site/jacoco/jacoco.xml
+          if [ ! -f "$REPORT" ]; then
+            echo '## JaCoCo Coverage Report' >> $GITHUB_STEP_SUMMARY
+            echo 'Coverage report not found – tests may have failed before reporting.' >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET, os
+          tree = ET.parse('target/site/jacoco/jacoco.xml')
+          counters = {c.get('type'): c for c in tree.getroot().findall('counter')}
+          order = ['INSTRUCTION', 'BRANCH', 'LINE', 'COMPLEXITY', 'METHOD', 'CLASS']
+          rows = []
+          for t in order:
+            if t not in counters:
+              continue
+            c = counters[t]
+            missed  = int(c.get('missed', 0))
+            covered = int(c.get('covered', 0))
+            total   = missed + covered
+            pct     = f'{100*covered//total}%' if total else 'N/A'
+            rows.append(f'| {t.capitalize()} | {covered} | {missed} | {total} | **{pct}** |')
+          summary = '\n'.join(rows)
+          out = os.environ['GITHUB_STEP_SUMMARY']
+          with open(out, 'a') as f:
+            f.write('## JaCoCo Coverage Report\n')
+            f.write('| Metric | Covered | Missed | Total | Coverage |\n')
+            f.write('|--------|--------:|-------:|------:|---------:|\n')
+            f.write(summary + '\n')
+          EOF
 
       - name: Upload JaCoCo HTML coverage report
         if: always()
@@ -35,12 +66,4 @@ jobs:
         with:
           name: jacoco-coverage-report
           path: java-assignment/target/site/jacoco/
-          retention-days: 14
-
-      - name: Publish coverage summary
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: jacoco-xml-report
-          path: java-assignment/target/jacoco.xml
           retention-days: 14
