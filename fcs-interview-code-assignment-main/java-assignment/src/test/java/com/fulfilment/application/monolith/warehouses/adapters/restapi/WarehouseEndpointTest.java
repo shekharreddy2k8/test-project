@@ -37,6 +37,8 @@ public class WarehouseEndpointTest {
     setField(resource, "replaceWarehouseUseCase", replaceUseCase);
     setField(resource, "archiveWarehouseUseCase", archiveUseCase);
 
+    
+
     repository.create(seed("MWH.001", "ZWOLLE-001", 100, 10));
     repository.create(seed("MWH.012", "AMSTERDAM-001", 50, 5));
     repository.create(seed("MWH.023", "TILBURG-001", 30, 27));
