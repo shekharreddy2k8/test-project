@@ -116,6 +116,7 @@ public class WarehouseEndpointTest {
     WebApplicationException exception =
         assertThrows(WebApplicationException.class, () -> resource.archiveAWarehouseUnitByID("NONEXISTENT"));
     assertEquals(404, exception.getResponse().getStatus());
+    
   }
 
   @Test
