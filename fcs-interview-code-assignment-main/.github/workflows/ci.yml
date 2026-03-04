@@ -22,13 +22,13 @@ jobs:
           cache: maven
 
       - name: Build and run tests with JaCoCo coverage
-        working-directory: java-assignment
+        working-directory: fcs-interview-code-assignment-main/java-assignment
         # verify phase: compiles, runs unit tests, generates JaCoCo report, enforces 80% threshold
         run: ./mvnw verify --no-transfer-progress
 
       - name: Publish coverage summary to Actions step summary
         if: always()
-        working-directory: java-assignment
+        working-directory: fcs-interview-code-assignment-main/java-assignment
         run: |
           REPORT=target/site/jacoco/jacoco.xml
           if [ ! -f "$REPORT" ]; then
@@ -65,5 +65,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-coverage-report
-          path: java-assignment/target/site/jacoco/
+          path: fcs-interview-code-assignment-main/java-assignment/target/site/jacoco/
           retention-days: 14
